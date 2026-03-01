@@ -39,7 +39,7 @@ export class SpineView extends ItemView {
 	}
 
 	getIcon(): string {
-		return "layout-list";
+		return "columns-2";
 	}
 
 	async onOpen() {

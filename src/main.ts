@@ -14,7 +14,7 @@ export default class SpinePlugin extends Plugin {
 		});
 
 		// Add ribbon icon to open the panel
-		this.addRibbonIcon("layout-list", "Spine", () => {
+		this.addRibbonIcon("columns-2", "Spine", () => {
 			this.activateView();
 		});
 
