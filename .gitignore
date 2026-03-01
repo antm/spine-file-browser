@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output (included in releases, not in source)
+main.js
+
+# Obsidian data
+data.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+
+# Aliases
+FileBrowser alias

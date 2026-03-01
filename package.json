@@ -1,0 +1,22 @@
+{
+	"name": "obsidian-ulysses-file-browser",
+	"version": "0.1.0",
+	"description": "Ulysses-style two-column file browser for Obsidian with custom ordering",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+	},
+	"keywords": [],
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^16.11.6",
+		"esbuild": "0.25.5",
+		"tslib": "2.4.0",
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"obsidian": "latest"
+	}
+}

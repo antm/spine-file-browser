@@ -1,0 +1,467 @@
+/* ── Spine File Browser ── */
+
+/* Remove Obsidian's default view padding */
+.view-content:has(.spine-browser) {
+	padding: 0;
+}
+
+.spine-browser {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.spine-columns {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* ── Folder Column (left) ── */
+
+.spine-folder-list {
+	width: 45%;
+	min-width: 100px;
+	max-width: 70%;
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background-color: var(--background-secondary);
+}
+
+/* ── Column Divider (drag to resize) ── */
+
+.spine-divider {
+	width: 1px;
+	background-color: var(--background-modifier-border);
+	cursor: col-resize;
+	flex-shrink: 0;
+	position: relative;
+}
+
+/* Invisible wider grab zone */
+.spine-divider::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -3px;
+	width: 7px;
+	cursor: col-resize;
+}
+
+.spine-divider:hover,
+.spine-divider.is-dragging {
+	background-color: var(--interactive-accent);
+}
+
+/* ── File Column (right) ── */
+
+.spine-file-list {
+	flex: 1;
+	min-width: 120px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background-color: var(--background-primary);
+}
+
+/* ── Panel Header ── */
+
+.spine-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px 8px;
+	flex-shrink: 0;
+}
+
+.spine-panel-title {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+}
+
+/* ── Header Action Buttons ── */
+
+.spine-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.spine-header-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.spine-header-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.spine-header-btn svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* ── Scrollable List ── */
+
+.spine-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 2px 0;
+}
+
+/* ── Folder Items ── */
+
+.spine-folder-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	cursor: pointer;
+	border-radius: 0;
+	font-size: 13px;
+	color: var(--text-normal);
+	transition: background-color 0.1s ease;
+	user-select: none;
+}
+
+.spine-folder-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.spine-folder-item.is-selected {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.spine-folder-item.is-selected .spine-folder-icon {
+	color: var(--text-on-accent);
+}
+
+.spine-folder-item.is-selected .spine-folder-count {
+	color: var(--text-on-accent);
+	opacity: 0.7;
+}
+
+.spine-folder-icon {
+	display: flex;
+	align-items: center;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.spine-folder-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.spine-folder-name {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.spine-folder-count {
+	font-size: 11px;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+/* ── File Items ── */
+
+.spine-file-item {
+	padding: 10px 12px;
+	cursor: pointer;
+	border-bottom: 1px solid var(--background-modifier-border);
+	transition: background-color 0.1s ease;
+	user-select: none;
+}
+
+.spine-file-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.spine-file-item.is-active {
+	background-color: var(--background-modifier-active-hover, var(--background-secondary));
+	border-left: 3px solid var(--interactive-accent);
+	padding-left: 9px;
+}
+
+.spine-file-name {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin-bottom: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.spine-file-preview {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-bottom: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.3;
+}
+
+.spine-file-meta {
+	font-size: 11px;
+	color: var(--text-faint);
+}
+
+/* ── Group Headers (subfolder sections in file list) ── */
+
+.spine-group-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 12px 6px;
+	margin-top: 0;
+	cursor: pointer;
+	user-select: none;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.spine-group-header:first-child {
+	margin-top: 0;
+	border-top: none;
+}
+
+.spine-group-icon {
+	display: flex;
+	align-items: center;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.spine-group-icon svg {
+	width: 12px;
+	height: 12px;
+}
+
+.spine-group-name {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	flex: 1;
+}
+
+.spine-group-count {
+	font-size: 10px;
+	color: var(--text-faint);
+}
+
+.spine-group-header:hover .spine-group-name {
+	color: var(--text-normal);
+}
+
+/* ── Empty State ── */
+
+.spine-empty {
+	padding: 16px 8px;
+	text-align: center;
+	color: var(--text-faint);
+	font-size: 12px;
+}
+
+/* ── Drag & Drop Indicators ── */
+
+.spine-folder-item.is-dragging,
+.spine-file-item.is-dragging {
+	opacity: 0.4;
+}
+
+.spine-folder-item,
+.spine-file-item {
+	position: relative;
+}
+
+/* Single drop indicator — always shown as a bottom edge line */
+.spine-drop-indicator {
+	box-shadow: 0 2px 0 0 var(--interactive-accent);
+}
+
+/* ── Inline Input (new folder / new note) ── */
+
+.spine-inline-input {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 8px;
+}
+
+.spine-inline-icon {
+	display: flex;
+	align-items: center;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.spine-inline-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.spine-inline-field,
+.spine-rename-field {
+	flex: 1;
+	width: 100%;
+	background: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	border-radius: 4px;
+	padding: 3px 6px;
+	font-size: 13px;
+	color: var(--text-normal);
+	outline: none;
+	font-family: inherit;
+}
+
+.spine-inline-field:focus,
+.spine-rename-field:focus {
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+/* ── Folder Chevron (collapse/expand) ── */
+
+.spine-folder-chevron {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	color: var(--text-faint);
+	cursor: pointer;
+	border-radius: 3px;
+	width: 16px;
+	height: 16px;
+	justify-content: center;
+}
+
+.spine-folder-chevron:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.spine-folder-chevron svg {
+	width: 12px;
+	height: 12px;
+}
+
+.spine-folder-chevron-spacer {
+	width: 16px;
+	flex-shrink: 0;
+}
+
+.spine-folder-item.is-selected .spine-folder-chevron {
+	color: var(--text-on-accent);
+}
+
+/* ── Search Bar ── */
+
+.spine-search-bar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.spine-search-icon {
+	display: flex;
+	align-items: center;
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.spine-search-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.spine-search-input {
+	flex: 1;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 3px 6px;
+	font-size: 12px;
+	color: var(--text-normal);
+	outline: none;
+	font-family: inherit;
+}
+
+.spine-search-input:focus {
+	border-color: var(--interactive-accent);
+}
+
+.spine-search-input::placeholder {
+	color: var(--text-faint);
+}
+
+.spine-search-clear {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+	cursor: pointer;
+	color: var(--text-faint);
+}
+
+.spine-search-clear:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.spine-search-clear svg {
+	width: 12px;
+	height: 12px;
+}
+
+/* ── Drop Target (move file into folder) ── */
+
+.spine-folder-item.spine-drop-target {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	opacity: 0.8;
+}
+
+.spine-folder-item.spine-drop-target .spine-folder-icon,
+.spine-folder-item.spine-drop-target .spine-folder-count,
+.spine-folder-item.spine-drop-target .spine-folder-chevron {
+	color: var(--text-on-accent);
+}
+
+/* ── Keyboard Focus ── */
+
+.spine-file-item.is-keyboard-focused {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: -2px;
+}
+
+.spine-list:focus {
+	outline: none;
+}
+
+/* ── end ── */

@@ -1,0 +1,9 @@
+{
+	"id": "spine-file-browser",
+	"name": "Spine",
+	"version": "0.1.0",
+	"minAppVersion": "1.0.0",
+	"description": "A two-column file browser with drag-and-drop ordering.",
+	"author": "Anthony Morales",
+	"isDesktopOnly": true
+}
