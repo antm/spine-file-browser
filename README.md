@@ -4,7 +4,7 @@ A two-column, Ulysses-style file browser for [Obsidian](https://obsidian.md).
 
 ![Desktop Only](https://img.shields.io/badge/platform-desktop%20only-blue)
 
-Spine replaces Obsidian's default file explorer with a two-panel layout: folders on the left, files on the right. Designed for writers transitioning from Ulysses or anyone who prefers a linear document browser over a tree view.
+Spine replaces Obsidian's default file explorer with a two-panel layout: folders on the left, files on the right. Designed for anyone who prefers a linear document browser over a tree view.
 
 ## Features
 
