@@ -55,6 +55,10 @@ export class SpineView extends ItemView {
 		this.fileListEl = wrapper.createDiv({ cls: "spine-file-list" });
 		this.setupColumnResize(divider);
 
+		if (this.plugin.settings.folderColumnWidth !== null) {
+			this.folderListEl.style.width = `${this.plugin.settings.folderColumnWidth}px`;
+		}
+
 		// Validate selectedFolderPath still exists
 		if (
 			this.selectedFolderPath !== "/" &&
@@ -98,6 +102,8 @@ export class SpineView extends ItemView {
 			document.removeEventListener("mouseup", onMouseUp);
 			document.body.style.cursor = "";
 			document.body.style.userSelect = "";
+			this.plugin.settings.folderColumnWidth = this.folderListEl.offsetWidth;
+			void this.plugin.saveSettings();
 		};
 
 		divider.addEventListener("mousedown", (e) => {

@@ -12,6 +12,7 @@ export interface SpineSettings {
 	showFileExtensions: boolean;
 	sortMode: SortMode;
 	sortAscending: boolean;
+	folderColumnWidth: number | null;
 }
 
 export const DEFAULT_SETTINGS: SpineSettings = {
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: SpineSettings = {
 	showFileExtensions: false,
 	sortMode: "manual",
 	sortAscending: true,
+	folderColumnWidth: null,
 };
 
 export const VIEW_TYPE_SPINE = "spine-file-browser-view";
