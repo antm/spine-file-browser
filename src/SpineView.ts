@@ -801,14 +801,15 @@ export class SpineView extends ItemView {
 	private updateOrderingOnRename(oldPath: string, newPath: string, isFolder: boolean) {
 		const ordering = this.plugin.settings.ordering;
 
-		// Replace old path with new path in all ordering arrays
+		// Rewrite values in all ordering arrays (exact match + child paths for folders)
 		for (const key of Object.keys(ordering)) {
 			const paths = ordering[key];
 			if (!paths) continue;
-			const idx = paths.indexOf(oldPath);
-			if (idx !== -1) {
-				paths[idx] = newPath;
-			}
+			ordering[key] = paths.map((p) => {
+				if (p === oldPath) return newPath;
+				if (isFolder && p.startsWith(oldPath + "/")) return newPath + p.slice(oldPath.length);
+				return p;
+			});
 		}
 
 		// For folders, also update ordering keys that reference the old folder path
@@ -820,6 +821,16 @@ export class SpineView extends ItemView {
 					delete ordering[key];
 				}
 			}
+		}
+	}
+
+	/** Called by the plugin for vault-level rename events (external renames).
+	 *  Only updates in-memory state — caller is responsible for save + refresh. */
+	public handleExternalRename(oldPath: string, newPath: string, isFolder: boolean) {
+		this.updateOrderingOnRename(oldPath, newPath, isFolder);
+		if (isFolder && this.selectedFolderPath === oldPath) {
+			this.selectedFolderPath = newPath;
+			this.plugin.settings.lastSelectedFolder = newPath;
 		}
 	}
 

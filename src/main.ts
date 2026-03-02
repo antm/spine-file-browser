@@ -1,9 +1,10 @@
-import { Plugin, TFile, TFolder, WorkspaceLeaf } from "obsidian";
+import { Plugin, TAbstractFile, TFile, TFolder, WorkspaceLeaf } from "obsidian";
 import { SpineView } from "./SpineView";
 import { DEFAULT_SETTINGS, SpineSettings, VIEW_TYPE_SPINE } from "./types";
 
 export default class SpinePlugin extends Plugin {
 	settings: SpineSettings;
+	private renameDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -30,7 +31,7 @@ export default class SpinePlugin extends Plugin {
 		// Listen for vault changes to refresh the view
 		this.registerEvent(this.app.vault.on("create", () => this.refreshView()));
 		this.registerEvent(this.app.vault.on("delete", () => this.refreshView()));
-		this.registerEvent(this.app.vault.on("rename", () => this.refreshView()));
+		this.registerEvent(this.app.vault.on("rename", (file, oldPath) => this.handleRename(file, oldPath)));
 	}
 
 	onunload() {
@@ -68,6 +69,25 @@ export default class SpinePlugin extends Plugin {
 				view.refresh();
 			}
 		}
+	}
+
+	private handleRename(file: TAbstractFile, oldPath: string) {
+		// Update ordering in memory immediately (fast, synchronous)
+		const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_SPINE);
+		for (const leaf of leaves) {
+			if (leaf.view instanceof SpineView) {
+				leaf.view.handleExternalRename(oldPath, file.path, file instanceof TFolder);
+			}
+		}
+
+		// Debounce save + refresh — folder renames fire one event per child file,
+		// so we wait until the burst of events settles before re-rendering.
+		if (this.renameDebounceTimer) clearTimeout(this.renameDebounceTimer);
+		this.renameDebounceTimer = setTimeout(() => {
+			this.renameDebounceTimer = null;
+			void this.saveSettings();
+			this.refreshView();
+		}, 150);
 	}
 
 	async loadSettings() {
