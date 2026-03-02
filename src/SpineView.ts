@@ -1370,6 +1370,7 @@ export class SpineView extends ItemView {
 	private async loadPreview(file: TFile, el: HTMLElement) {
 		try {
 			const content = await this.app.vault.cachedRead(file);
+			if (!el.isConnected) return;
 			const lines = content.split("\n");
 			let preview = "";
 			for (const line of lines) {
@@ -1391,7 +1392,7 @@ export class SpineView extends ItemView {
 			}
 			el.setText(preview || "Empty note");
 		} catch {
-			el.setText("...");
+			if (el.isConnected) el.setText("...");
 		}
 	}
 
