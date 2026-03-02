@@ -492,6 +492,7 @@ export class SpineView extends ItemView {
 		this.fileListScrollEl = listEl;
 		listEl.setAttribute("tabindex", "0");
 		this.setupKeyboardNav(listEl, "files");
+		this.setupListTopDropZone(listEl);
 
 		const folder = this.selectedFolderPath === "/"
 			? this.app.vault.getRoot()
@@ -698,6 +699,7 @@ export class SpineView extends ItemView {
 		this.fileListScrollEl = newListEl;
 		newListEl.setAttribute("tabindex", "0");
 		this.setupKeyboardNav(newListEl, "files");
+		this.setupListTopDropZone(newListEl);
 
 		const folder = this.selectedFolderPath === "/"
 			? this.app.vault.getRoot()
@@ -1082,6 +1084,39 @@ export class SpineView extends ItemView {
 
 	// ── DRAG & DROP ──
 
+	/**
+	 * Adds dragover/drop listeners to the list container so that dropping above
+	 * the first file item (into the empty top padding area) inserts at position 0.
+	 * Without this, the browser rejects drops in that zone entirely.
+	 */
+	private setupListTopDropZone(listEl: HTMLElement) {
+		listEl.addEventListener("dragover", (evt) => {
+			if (!this.dragState || this.dragState.sourcePanel !== "files") return;
+			const firstItem = listEl.querySelector(".spine-file-item") as HTMLElement | null;
+			if (!firstItem || evt.clientY >= firstItem.getBoundingClientRect().top) return;
+			evt.preventDefault();
+			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
+			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+				s.removeClass("spine-drop-indicator");
+			});
+			firstItem.addClass("spine-drop-indicator");
+		});
+
+		listEl.addEventListener("drop", async (evt) => {
+			if (!this.dragState || this.dragState.sourcePanel !== "files") return;
+			const firstItem = listEl.querySelector(".spine-file-item") as HTMLElement | null;
+			if (!firstItem || evt.clientY >= firstItem.getBoundingClientRect().top) return;
+			evt.preventDefault();
+			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+				s.removeClass("spine-drop-indicator");
+			});
+			const targetPath = firstItem.getAttribute("data-path");
+			if (!targetPath || this.dragState.draggedPath === targetPath) return;
+			await this.reorderItem(this.dragState.draggedPath, targetPath, true, "files");
+			this.renderFiles();
+		});
+	}
+
 	private setupDragHandlers(el: HTMLElement, path: string, panel: "folders" | "files") {
 		el.addEventListener("dragstart", (evt) => {
 			this.dragState = { draggedEl: el, draggedPath: path, sourcePanel: panel };
@@ -1186,8 +1221,7 @@ export class SpineView extends ItemView {
 						.map((f) => f.path);
 				}
 			} else {
-				const files = this.getFilesInFolder(parentPath);
-				currentOrder = files.map((f) => f.path);
+				currentOrder = this.getOrderedFiles(parentPath).map((f) => f.path);
 			}
 		}
 
