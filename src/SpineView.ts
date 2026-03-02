@@ -23,6 +23,7 @@ export class SpineView extends ItemView {
 	private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 	private isInlineEditing: boolean = false;
 	private pendingRefresh: boolean = false;
+	private keyboardFocusedPath: string | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SpinePlugin) {
 		super(leaf);
@@ -524,6 +525,12 @@ export class SpineView extends ItemView {
 			const empty = listEl.createDiv({ cls: "spine-empty" });
 			empty.createSpan({ text: this.searchQuery ? "No matching files" : "No files" });
 		}
+
+		// Restore keyboard focus after DOM rebuild
+		if (this.keyboardFocusedPath) {
+			const focused = listEl.querySelector(`[data-path="${CSS.escape(this.keyboardFocusedPath)}"]`) as HTMLElement | null;
+			if (focused) focused.addClass("is-keyboard-focused");
+		}
 	}
 
 	private renderSubfolderFiles(listEl: HTMLElement, parentFolder: TFolder, depth: number) {
@@ -867,6 +874,7 @@ export class SpineView extends ItemView {
 		if (panel === "files") {
 			items.forEach((el) => el.removeClass("is-keyboard-focused"));
 			target.addClass("is-keyboard-focused");
+			this.keyboardFocusedPath = target.getAttribute("data-path");
 			target.scrollIntoView({ behavior: "smooth", block: "nearest" });
 		} else {
 			target.click();
