@@ -17,3 +17,6 @@ Thumbs.db
 
 # Aliases
 FileBrowser alias
+
+# Local test vault (symlinks plugin files for dev testing)
+test-vault/

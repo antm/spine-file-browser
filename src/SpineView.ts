@@ -1096,10 +1096,11 @@ export class SpineView extends ItemView {
 			if (!firstItem || evt.clientY >= firstItem.getBoundingClientRect().top) return;
 			evt.preventDefault();
 			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
-			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above").forEach((s) => {
 				s.removeClass("spine-drop-indicator");
+				s.removeClass("spine-drop-above");
 			});
-			firstItem.addClass("spine-drop-indicator");
+			firstItem.addClass("spine-drop-above");
 		});
 
 		listEl.addEventListener("drop", async (evt) => {
@@ -1107,8 +1108,9 @@ export class SpineView extends ItemView {
 			const firstItem = listEl.querySelector(".spine-file-item") as HTMLElement | null;
 			if (!firstItem || evt.clientY >= firstItem.getBoundingClientRect().top) return;
 			evt.preventDefault();
-			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above").forEach((s) => {
 				s.removeClass("spine-drop-indicator");
+				s.removeClass("spine-drop-above");
 			});
 			const targetPath = firstItem.getAttribute("data-path");
 			if (!targetPath || this.dragState.draggedPath === targetPath) return;
@@ -1130,8 +1132,9 @@ export class SpineView extends ItemView {
 		el.addEventListener("dragend", () => {
 			el.removeClass("is-dragging");
 			this.dragState = null;
-			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-target").forEach((el) => {
+			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above, .spine-drop-target").forEach((el) => {
 				el.removeClass("spine-drop-indicator");
+				el.removeClass("spine-drop-above");
 				el.removeClass("spine-drop-target");
 			});
 		});
@@ -1144,8 +1147,9 @@ export class SpineView extends ItemView {
 			}
 
 			// Clear ALL indicators, then show exactly one line
-			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above").forEach((s) => {
 				s.removeClass("spine-drop-indicator");
+				s.removeClass("spine-drop-above");
 			});
 
 			const rect = el.getBoundingClientRect();
@@ -1157,7 +1161,8 @@ export class SpineView extends ItemView {
 				if (prev && !prev.hasClass("spine-group-header")) {
 					prev.addClass("spine-drop-indicator");
 				} else {
-					el.addClass("spine-drop-indicator");
+					// First item in list/group — show top-edge line
+					el.addClass("spine-drop-above");
 				}
 			} else {
 				el.addClass("spine-drop-indicator");
@@ -1166,12 +1171,14 @@ export class SpineView extends ItemView {
 
 		el.addEventListener("dragleave", () => {
 			el.removeClass("spine-drop-indicator");
+			el.removeClass("spine-drop-above");
 		});
 
 		el.addEventListener("drop", async (evt) => {
 			evt.preventDefault();
-			this.containerEl.querySelectorAll(".spine-drop-indicator").forEach((s) => {
+			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above").forEach((s) => {
 				s.removeClass("spine-drop-indicator");
+				s.removeClass("spine-drop-above");
 			});
 
 			if (!this.dragState || this.dragState.sourcePanel !== panel) return;

@@ -302,6 +302,20 @@
 	box-shadow: 0 2px 0 0 var(--interactive-accent);
 }
 
+/* Folder reorder drag indicators */
+.spine-folder-item.spine-drop-above {
+	box-shadow: 0 -2px 0 0 var(--interactive-accent);
+}
+
+.spine-folder-item.spine-drop-below {
+	box-shadow: 0 2px 0 0 var(--interactive-accent);
+}
+
+/* File list top drop indicator (insert before first item) */
+.spine-file-item.spine-drop-above {
+	box-shadow: 0 -2px 0 0 var(--interactive-accent);
+}
+
 /* ── Inline Input (new folder / new note) ── */
 
 .spine-inline-input {
