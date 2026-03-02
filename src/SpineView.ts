@@ -123,6 +123,9 @@ export class SpineView extends ItemView {
 			clearTimeout(this.searchDebounceTimer);
 		}
 		this.plugin.settings.lastSelectedFolder = this.selectedFolderPath;
+		if (this.folderListEl) {
+			this.plugin.settings.folderColumnWidth = this.folderListEl.offsetWidth;
+		}
 		await this.plugin.saveSettings();
 	}
 
