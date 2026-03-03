@@ -9,6 +9,9 @@ export default class SpinePlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// Vault isn't indexed at onload — defer vault-dependent validation until ready
+		this.app.workspace.onLayoutReady(() => this.validateSettings());
+
 		// Register the custom view
 		this.registerView(VIEW_TYPE_SPINE, (leaf: WorkspaceLeaf) => {
 			return new SpineView(leaf, this);
@@ -96,7 +99,10 @@ export default class SpinePlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			(await this.loadData()) as Partial<SpineSettings>
 		);
+	}
 
+	/** Vault-dependent validation — must run after onLayoutReady when files are indexed. */
+	private validateSettings() {
 		// Validate lastSelectedFolder still exists
 		if (
 			this.settings.lastSelectedFolder !== "/" &&

@@ -24,6 +24,8 @@ export class SpineView extends ItemView {
 	private isInlineEditing: boolean = false;
 	private pendingRefresh: boolean = false;
 	private keyboardFocusedPath: string | null = null;
+	private keyboardFocusedFolder: string | null = null;
+	private pendingInternalRename: boolean = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: SpinePlugin) {
 		super(leaf);
@@ -123,11 +125,6 @@ export class SpineView extends ItemView {
 		if (this.searchDebounceTimer) {
 			clearTimeout(this.searchDebounceTimer);
 		}
-		this.plugin.settings.lastSelectedFolder = this.selectedFolderPath;
-		if (this.folderListEl) {
-			this.plugin.settings.folderColumnWidth = this.folderListEl.offsetWidth;
-		}
-		await this.plugin.saveSettings();
 	}
 
 	refresh() {
@@ -265,6 +262,7 @@ export class SpineView extends ItemView {
 			this.searchQuery = "";
 			this.renderFolders();
 			this.renderFiles();
+			this.fileListScrollEl?.focus({ preventScroll: true });
 			this.plugin.settings.lastSelectedFolder = path;
 			void this.plugin.saveSettings();
 		});
@@ -526,8 +524,8 @@ export class SpineView extends ItemView {
 			empty.createSpan({ text: this.searchQuery ? "No matching files" : "No files" });
 		}
 
-		// Restore keyboard focus after DOM rebuild
-		if (this.keyboardFocusedPath) {
+		// Restore keyboard focus after DOM rebuild (only if still in the same folder)
+		if (this.keyboardFocusedPath && this.keyboardFocusedFolder === this.selectedFolderPath) {
 			const focused = listEl.querySelector(`[data-path="${CSS.escape(this.keyboardFocusedPath)}"]`) as HTMLElement | null;
 			if (focused) focused.addClass("is-keyboard-focused");
 		}
@@ -558,6 +556,7 @@ export class SpineView extends ItemView {
 				this.searchQuery = "";
 				this.renderFolders();
 				this.renderFiles();
+				this.fileListScrollEl?.focus({ preventScroll: true });
 				this.plugin.settings.lastSelectedFolder = subfolder.path;
 				void this.plugin.saveSettings();
 			});
@@ -597,6 +596,9 @@ export class SpineView extends ItemView {
 		metaEl.setText(this.formatDate(date));
 
 		item.addEventListener("click", async () => {
+			// Set as keyboard anchor so highlight is correct when list regains focus
+			this.keyboardFocusedPath = file.path;
+			this.keyboardFocusedFolder = this.selectedFolderPath;
 			try {
 				await this.app.workspace.getLeaf().openFile(file);
 			} catch (e) {
@@ -823,7 +825,8 @@ export class SpineView extends ItemView {
 		if (isFolder) {
 			for (const key of Object.keys(ordering)) {
 				if (key.endsWith(`:${oldPath}`) || key.includes(`:${oldPath}/`)) {
-					const newKey = key.replace(oldPath, newPath);
+					const colonIdx = key.indexOf(":");
+				const newKey = key.slice(0, colonIdx + 1) + newPath + key.slice(colonIdx + 1 + oldPath.length);
 					ordering[newKey] = ordering[key]!;
 					delete ordering[key];
 				}
@@ -834,6 +837,7 @@ export class SpineView extends ItemView {
 	/** Called by the plugin for vault-level rename events (external renames).
 	 *  Only updates in-memory state — caller is responsible for save + refresh. */
 	public handleExternalRename(oldPath: string, newPath: string, isFolder: boolean) {
+		if (this.pendingInternalRename) return;
 		this.updateOrderingOnRename(oldPath, newPath, isFolder);
 		if (isFolder && this.selectedFolderPath === oldPath) {
 			this.selectedFolderPath = newPath;
@@ -844,6 +848,15 @@ export class SpineView extends ItemView {
 	// ── KEYBOARD NAVIGATION ──
 
 	private setupKeyboardNav(listEl: HTMLElement, panel: "folders" | "files") {
+		// Claim focus on any click so arrow keys work without needing to hit empty space
+		if (panel === "files") {
+			// Only claim focus when clicking list background (empty space), not file items.
+			// File item clicks let openFile() give focus to the editor as expected.
+			listEl.addEventListener("mousedown", (evt) => {
+				if (evt.target === listEl) listEl.focus({ preventScroll: true });
+			});
+		}
+
 		listEl.addEventListener("keydown", (evt) => {
 			const itemSelector = panel === "folders" ? ".spine-folder-item" : ".spine-file-item";
 			const items = Array.from(listEl.querySelectorAll(itemSelector)) as HTMLElement[];
@@ -875,6 +888,7 @@ export class SpineView extends ItemView {
 			items.forEach((el) => el.removeClass("is-keyboard-focused"));
 			target.addClass("is-keyboard-focused");
 			this.keyboardFocusedPath = target.getAttribute("data-path");
+			this.keyboardFocusedFolder = this.selectedFolderPath;
 			target.scrollIntoView({ behavior: "smooth", block: "nearest" });
 		} else {
 			target.click();
@@ -1083,9 +1097,14 @@ export class SpineView extends ItemView {
 					cancel();
 					return;
 				}
-				// Update ordering keys before rename
-				this.updateOrderingOnRename(currentPath, newPath, isFolder);
-				await this.app.fileManager.renameFile(abstractFile, newPath);
+				// Update ordering keys before rename; flag prevents double-apply via vault event
+				this.pendingInternalRename = true;
+				try {
+					this.updateOrderingOnRename(currentPath, newPath, isFolder);
+					await this.app.fileManager.renameFile(abstractFile, newPath);
+				} finally {
+					this.pendingInternalRename = false;
+				}
 				if (isFolder && this.selectedFolderPath === currentPath) {
 					this.selectedFolderPath = newPath;
 					this.plugin.settings.lastSelectedFolder = newPath;
@@ -1122,6 +1141,9 @@ export class SpineView extends ItemView {
 			if (!this.dragState || this.dragState.sourcePanel !== "files") return;
 			const firstItem = listEl.querySelector(".spine-file-item") as HTMLElement | null;
 			if (!firstItem || evt.clientY >= firstItem.getBoundingClientRect().top) return;
+			// Block cross-folder drags
+			const targetPath = firstItem.getAttribute("data-path");
+			if (targetPath && this.getParentPath(this.dragState.draggedPath) !== this.getParentPath(targetPath)) return;
 			evt.preventDefault();
 			if (evt.dataTransfer) evt.dataTransfer.dropEffect = "move";
 			this.containerEl.querySelectorAll(".spine-drop-indicator, .spine-drop-above").forEach((s) => {
@@ -1142,6 +1164,8 @@ export class SpineView extends ItemView {
 			});
 			const targetPath = firstItem.getAttribute("data-path");
 			if (!targetPath || this.dragState.draggedPath === targetPath) return;
+			// Guard: block cross-folder drops
+			if (this.getParentPath(this.dragState.draggedPath) !== this.getParentPath(targetPath)) return;
 			await this.reorderItem(this.dragState.draggedPath, targetPath, true, "files");
 			this.renderFiles();
 		});
@@ -1168,8 +1192,15 @@ export class SpineView extends ItemView {
 		});
 
 		el.addEventListener("dragover", (evt) => {
-			evt.preventDefault();
 			if (!this.dragState || this.dragState.sourcePanel !== panel) return;
+
+			// Block cross-folder file drags — don't call preventDefault so cursor shows "not allowed"
+			if (panel === "files") {
+				const targetPath = el.getAttribute("data-path");
+				if (targetPath && this.getParentPath(this.dragState.draggedPath) !== this.getParentPath(targetPath)) return;
+			}
+
+			evt.preventDefault();
 			if (evt.dataTransfer) {
 				evt.dataTransfer.dropEffect = "move";
 			}
@@ -1215,6 +1246,9 @@ export class SpineView extends ItemView {
 			const targetPath = el.getAttribute("data-path");
 			if (!targetPath || draggedPath === targetPath) return;
 
+			// Guard: block cross-folder file drops
+			if (panel === "files" && this.getParentPath(draggedPath) !== this.getParentPath(targetPath)) return;
+
 			const rect = el.getBoundingClientRect();
 			const midY = rect.top + rect.height / 2;
 			const insertBefore = evt.clientY < midY;
@@ -1239,7 +1273,7 @@ export class SpineView extends ItemView {
 		if (panel === "folders") {
 			parentPath = this.getParentPath(targetPath);
 		} else {
-			parentPath = this.selectedFolderPath;
+			parentPath = this.getParentPath(draggedPath);
 		}
 
 		const orderKey = panel === "folders" ? `folders:${parentPath}` : `files:${parentPath}`;
