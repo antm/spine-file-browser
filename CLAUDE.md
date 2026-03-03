@@ -42,6 +42,10 @@ There is currently no automated test suite. Manual testing in a dev vault is the
 - Settings changes always followed by `plugin.saveSettings()`
 - Keep `SpineView.ts` methods focused; extract helpers rather than growing large render methods
 
+## UX Backlog
+
+See [UX_IMPROVEMENTS.md](UX_IMPROVEMENTS.md) for a prioritized list of pending UX improvements to pick up next session.
+
 ## UX Principles
 
 - Resilient recovery over workarounds — let errors surface, notify the user with `new Notice(...)`, and offer a clear path forward
